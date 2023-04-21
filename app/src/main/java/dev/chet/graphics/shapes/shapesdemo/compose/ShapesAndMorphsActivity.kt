@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalTextApi::class)
+
 package dev.chet.graphics.shapes.shapesdemo.compose
 
 import android.graphics.Matrix
@@ -54,6 +56,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.graphics.shapes.Morph
@@ -127,6 +131,7 @@ private fun MorphComposableImpl(
     isDebug: Boolean = false,
     prep: ContentDrawScope.() -> Unit
 ) {
+    val tm = rememberTextMeasurer()
     Box(
         modifier
             .fillMaxSize()
@@ -135,9 +140,15 @@ private fun MorphComposableImpl(
                 drawContent()
                 sizedMorph.resizeMaybe(size.width, size.height)
                 if (isDebug) {
-                    debugDraw(sizedMorph.morph)
+                    textDrawScope(tm) {
+                        debugDraw(sizedMorph.morph)
+                    }
                 } else {
-                    drawPath(sizedMorph.morph.asPath().asComposePath(), Color.White)
+                    drawPath(
+                        sizedMorph.morph
+                            .asPath()
+                            .asComposePath(), Color.White
+                    )
                 }
             })
 }
@@ -151,6 +162,7 @@ internal fun PolygonComposableImpl(
     val sizedPolygonCache = remember(shape) {
         mutableMapOf<Size, RoundedPolygon>()
     }
+    val tm = rememberTextMeasurer()
     Box(
         modifier
             .fillMaxSize()
@@ -161,9 +173,15 @@ internal fun PolygonComposableImpl(
                     RoundedPolygon(shape).apply { transform(matrix) }
                 }
                 if (debug) {
-                    debugDraw(sizedPolygon.toCubicShape())
+                    textDrawScope(tm) {
+                        debugDraw(sizedPolygon.toCubicShape())
+                    }
                 } else {
-                    drawPath(sizedPolygon.toPath().asComposePath(), Color.White)
+                    drawPath(
+                        sizedPolygon
+                            .toPath()
+                            .asComposePath(), Color.White
+                    )
                 }
             })
 }

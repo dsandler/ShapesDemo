@@ -14,28 +14,56 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalTextApi::class)
+
 package dev.chet.graphics.shapes.shapesdemo.compose
 
 import android.graphics.Path
 import android.graphics.PointF
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.Cubic
 import androidx.graphics.shapes.CubicShape
 import androidx.graphics.shapes.Morph
 
-internal fun DrawScope.debugDraw(morph: Morph) = debugDraw(morph.asCubics(), morph.asPath())
+interface TextDrawScope : DrawScope {
+    val textMeasurer: TextMeasurer
+}
 
-internal fun DrawScope.debugDraw(cubicShape: CubicShape) =
+fun DrawScope.textDrawScope(tm: TextMeasurer, block: TextDrawScope.() -> Unit) {
+    val ds = object : DrawScope by this, TextDrawScope {
+        override var textMeasurer = tm
+    }
+    block(ds)
+}
+internal fun TextDrawScope.debugDraw(morph: Morph) = debugDraw(morph.asCubics(), morph.asPath())
+
+internal fun TextDrawScope.debugDraw(cubicShape: CubicShape) =
     debugDraw(cubicShape.cubics, cubicShape.toPath())
 
-internal fun DrawScope.debugDraw(cubics: List<Cubic>, path: Path) {
+@OptIn(ExperimentalTextApi::class)
+internal fun TextDrawScope.debugDraw(cubics: List<Cubic>, path: Path) {
     drawPath(path.asComposePath(), Color.Green, style = Stroke(2f))
 
-    for (bezier in cubics) {
+    for ((i, bezier) in cubics.withIndex()) {
+        drawText(textMeasurer = textMeasurer, text = "$i", topLeft = bezier.p0.asOffset(),
+            size = Size(100.dp.toPx(), 100.dp.toPx()),
+            style = TextStyle(
+                color = Color.Cyan,
+                fontSize = 12.sp,
+
+            )
+        )
         // Draw red circles for start and end.
         drawCircle(bezier.p0, 6f, Color.Red, strokeWidth = 2f)
         drawCircle(bezier.p3, 8f, Color.Magenta, strokeWidth = 2f)
